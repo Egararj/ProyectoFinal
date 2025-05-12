@@ -2,6 +2,13 @@ package modelo;
 
 import java.time.LocalDate;
 
+import excepciones.CampoVacioException;
+import excepciones.DniException;
+import excepciones.FechaException;
+import excepciones.NumeroException;
+import utilidades.CompruebaDni;
+import utilidades.CompruebaFecha;
+
 public class Huesped {
 	private String nombre;
 	private String apellidos;
@@ -14,8 +21,8 @@ public class Huesped {
 	
 	public Huesped() {}
 
-	public Huesped(String nombre, String apellidos, String dniHuesped, int numeroGrupo, String matricula,
-			LocalDate fechaEntrada, LocalDate fechaSalida, int numeroHabitacion) {
+	public Huesped(String nombre, String apellidos, String dniHuesped, String numeroGrupo, String matricula,
+			String fechaEntrada, String fechaSalida, String numeroHabitacion) throws CampoVacioException, DniException, FechaException, NumeroException {
 		super();
 		this.setNombre(nombre);
 		this.setApellidos(apellidos);
@@ -27,8 +34,8 @@ public class Huesped {
 		this.setNumeroHabitacion(numeroHabitacion);
 	}
 
-	public Huesped(String nombre, String apellidos, String dniHuesped, int numeroGrupo, LocalDate fechaEntrada,
-			LocalDate fechaSalida, int numeroHabitacion) {
+	public Huesped(String nombre, String apellidos, String dniHuesped, String numeroGrupo, String fechaEntrada,
+			String fechaSalida, String numeroHabitacion) throws CampoVacioException, DniException, FechaException, NumeroException {
 		super();
 		this.setNombre(nombre);
 		this.setApellidos(apellidos);
@@ -43,7 +50,8 @@ public class Huesped {
 		return nombre;
 	}
 
-	public void setNombre(String nombre) {
+	public void setNombre(String nombre) throws CampoVacioException {
+		if(nombre.length() == 0) throw new CampoVacioException();
 		this.nombre = nombre;
 	}
 
@@ -51,7 +59,8 @@ public class Huesped {
 		return apellidos;
 	}
 
-	public void setApellidos(String apellidos) {
+	public void setApellidos(String apellidos) throws CampoVacioException {
+		if(apellidos.length() == 0) throw new CampoVacioException();
 		this.apellidos = apellidos;
 	}
 
@@ -59,7 +68,9 @@ public class Huesped {
 		return dniHuesped;
 	}
 
-	public void setDniHuesped(String dniHuesped) {
+	public void setDniHuesped(String dniHuesped) throws CampoVacioException, DniException {
+		if(dniHuesped.length() == 0) throw new CampoVacioException();
+		boolean correcto = CompruebaDni.CompruebaDni(dniHuesped);
 		this.dniHuesped = dniHuesped;
 	}
 
@@ -67,15 +78,22 @@ public class Huesped {
 		return numeroGrupo;
 	}
 
-	public void setNumeroGrupo(int numeroGrupo) {
-		this.numeroGrupo = numeroGrupo;
+	public void setNumeroGrupo(String numeroGrupo) throws NumeroException {
+		int numeroReal;
+		try {
+			numeroReal = Integer.parseInt(numeroGrupo);
+		}catch (Exception e) {
+			throw new NumeroException();
+		}
+		this.numeroGrupo = numeroReal;
 	}
 
 	public String getMatricula() {
 		return matricula;
 	}
 
-	public void setMatricula(String matricula) {
+	public void setMatricula(String matricula) throws CampoVacioException {
+		if(matricula.length() == 0) throw new CampoVacioException();
 		this.matricula = matricula;
 	}
 
@@ -83,24 +101,32 @@ public class Huesped {
 		return fechaEntrada;
 	}
 
-	public void setFechaEntrada(LocalDate fechaEntrada) {
-		this.fechaEntrada = fechaEntrada;
+	public void setFechaEntrada(String fechaEntrada) throws FechaException {
+		LocalDate fechaReal = CompruebaFecha.CompruebaFecha(fechaEntrada);
+		this.fechaEntrada = fechaReal;
 	}
 
 	public LocalDate getFechaSalida() {
 		return fechaSalida;
 	}
 
-	public void setFechaSalida(LocalDate fechaSalida) {
-		this.fechaSalida = fechaSalida;
+	public void setFechaSalida(String fechaSalida) throws FechaException {
+		LocalDate fechaReal = CompruebaFecha.CompruebaFecha(fechaSalida);
+		this.fechaSalida = fechaReal;
 	}
 
 	public int getNumeroHabitacion() {
 		return numeroHabitacion;
 	}
 
-	public void setNumeroHabitacion(int numeroHabitacion) {
-		this.numeroHabitacion = numeroHabitacion;
+	public void setNumeroHabitacion(String numeroHabitacion) throws NumeroException {
+		int numeroReal;
+		try {
+			numeroReal = Integer.parseInt(numeroHabitacion);
+		}catch (Exception e) {
+			throw new NumeroException();
+		}
+		this.numeroHabitacion = numeroReal;
 	}
 
 	@Override
