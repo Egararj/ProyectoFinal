@@ -4,6 +4,9 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import modelo.Habitacion;
+import modelo.Huesped;
+import modelo.Parking;
 import servicio.HabitacionService;
 import servicio.HuespedService;
 import servicio.ParkingService;
@@ -19,6 +22,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JComboBox;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.awt.event.ActionEvent;
 
 public class FrmMain extends JFrame {
@@ -54,6 +59,10 @@ public class FrmMain extends JFrame {
 	HuespedService HuS = new HuespedService();
 	ParkingService PaS = new ParkingService();
 	
+	List<Habitacion> habitaciones = new ArrayList<>();
+	List<Huesped> huespedes = new ArrayList<>();
+	List<Parking> parkings = new ArrayList<>();
+	
 	int puntero = 0;
 	
 	public FrmMain() {
@@ -67,6 +76,7 @@ public class FrmMain extends JFrame {
 		
 		definirVentana();
 		definirEventos();
+		cargarHabitacion();
 		
 		
 		this.setVisible(true);
@@ -74,7 +84,11 @@ public class FrmMain extends JFrame {
 
 
 
-
+	private void cargarHabitacion() {
+		
+		habitaciones = HaS.obtenerHabitaciones();
+		
+	}
 
 
 
@@ -179,11 +193,11 @@ public class FrmMain extends JFrame {
 		panelHabitacionIzquierda.add(lblHabitacionNumero);
 		
 		lblHabitacionCamas = new JLabel("Número de camas individuales:");
-		lblHabitacionCamas.setBounds(10, 141, 147, 14);
+		lblHabitacionCamas.setBounds(10, 141, 188, 14);
 		panelHabitacionIzquierda.add(lblHabitacionCamas);
 		
 		lblHabitacionCamasDobles = new JLabel("Número de camas dobles:");
-		lblHabitacionCamasDobles.setBounds(10, 166, 128, 14);
+		lblHabitacionCamasDobles.setBounds(10, 166, 188, 14);
 		panelHabitacionIzquierda.add(lblHabitacionCamasDobles);
 		
 		lblHabitacionPiso = new JLabel("Piso:");
@@ -199,32 +213,32 @@ public class FrmMain extends JFrame {
 		panelHabitacionIzquierda.add(lblHabitacionDni);
 		
 		textHabitacionNumero = new JTextField();
-		textHabitacionNumero.setBounds(172, 113, 86, 20);
+		textHabitacionNumero.setBounds(208, 116, 86, 20);
 		panelHabitacionIzquierda.add(textHabitacionNumero);
 		textHabitacionNumero.setColumns(10);
 		
 		textHabitacionCamas = new JTextField();
-		textHabitacionCamas.setBounds(172, 138, 86, 20);
+		textHabitacionCamas.setBounds(208, 141, 86, 20);
 		panelHabitacionIzquierda.add(textHabitacionCamas);
 		textHabitacionCamas.setColumns(10);
 		
 		textHabitacionCamasDobles = new JTextField();
-		textHabitacionCamasDobles.setBounds(172, 163, 86, 20);
+		textHabitacionCamasDobles.setBounds(208, 166, 86, 20);
 		panelHabitacionIzquierda.add(textHabitacionCamasDobles);
 		textHabitacionCamasDobles.setColumns(10);
 		
 		textHabitacionPiso = new JTextField();
-		textHabitacionPiso.setBounds(172, 191, 86, 20);
+		textHabitacionPiso.setBounds(208, 194, 86, 20);
 		panelHabitacionIzquierda.add(textHabitacionPiso);
 		textHabitacionPiso.setColumns(10);
 		
 		textHabitacionDni = new JTextField();
-		textHabitacionDni.setBounds(172, 238, 86, 20);
+		textHabitacionDni.setBounds(208, 241, 86, 20);
 		panelHabitacionIzquierda.add(textHabitacionDni);
 		textHabitacionDni.setColumns(10);
 		
 		chcHabitacionOcupada = new JCheckBox("Ocupada");
-		chcHabitacionOcupada.setBounds(172, 212, 86, 23);
+		chcHabitacionOcupada.setBounds(208, 215, 86, 23);
 		panelHabitacionIzquierda.add(chcHabitacionOcupada);
 		
 		panelHuespedIzquierda = new JPanel();
@@ -252,11 +266,11 @@ public class FrmMain extends JFrame {
 		panelHuespedIzquierda.add(btnHuespedDeshacer);
 		
 		lblHuespedNumeroHabitacion = new JLabel("Nº Habitación:");
-		lblHuespedNumeroHabitacion.setBounds(10, 116, 98, 14);
+		lblHuespedNumeroHabitacion.setBounds(10, 116, 80, 14);
 		panelHuespedIzquierda.add(lblHuespedNumeroHabitacion);
 		
 		lblHuespedNombre = new JLabel("Nombre:");
-		lblHuespedNombre.setBounds(10, 141, 46, 14);
+		lblHuespedNombre.setBounds(10, 141, 63, 14);
 		panelHuespedIzquierda.add(lblHuespedNombre);
 		
 		lblHuespedApellidos = new JLabel("Apellidos:");
@@ -268,11 +282,11 @@ public class FrmMain extends JFrame {
 		panelHuespedIzquierda.add(lblHuespedDni);
 		
 		lblHuespedFechaEntrada = new JLabel("Fecha Entrada:");
-		lblHuespedFechaEntrada.setBounds(10, 216, 80, 14);
+		lblHuespedFechaEntrada.setBounds(10, 216, 105, 14);
 		panelHuespedIzquierda.add(lblHuespedFechaEntrada);
 		
 		lblHuespedFechaSalida = new JLabel("Fecha Salida:");
-		lblHuespedFechaSalida.setBounds(10, 241, 80, 14);
+		lblHuespedFechaSalida.setBounds(10, 241, 105, 14);
 		panelHuespedIzquierda.add(lblHuespedFechaSalida);
 		
 		lblHuespedNumeroGrupo = new JLabel("Nº Grupo:");
@@ -284,42 +298,42 @@ public class FrmMain extends JFrame {
 		panelHuespedIzquierda.add(lblHuespedMatricula);
 		
 		textHuespedFechaEntrada = new JTextField();
-		textHuespedFechaEntrada.setBounds(100, 213, 86, 20);
+		textHuespedFechaEntrada.setBounds(125, 210, 86, 20);
 		panelHuespedIzquierda.add(textHuespedFechaEntrada);
 		textHuespedFechaEntrada.setColumns(10);
 		
 		textHuespedFechaSalida = new JTextField();
 		textHuespedFechaSalida.setColumns(10);
-		textHuespedFechaSalida.setBounds(100, 238, 86, 20);
+		textHuespedFechaSalida.setBounds(125, 235, 86, 20);
 		panelHuespedIzquierda.add(textHuespedFechaSalida);
 		
 		textHuespedNumeroHabitacion = new JTextField();
 		textHuespedNumeroHabitacion.setColumns(10);
-		textHuespedNumeroHabitacion.setBounds(100, 113, 86, 20);
+		textHuespedNumeroHabitacion.setBounds(125, 110, 86, 20);
 		panelHuespedIzquierda.add(textHuespedNumeroHabitacion);
 		
 		textHuespedNombre = new JTextField();
 		textHuespedNombre.setColumns(10);
-		textHuespedNombre.setBounds(100, 138, 130, 20);
+		textHuespedNombre.setBounds(125, 135, 130, 20);
 		panelHuespedIzquierda.add(textHuespedNombre);
 		
 		textHuespedDni = new JTextField();
-		textHuespedDni.setBounds(100, 188, 86, 20);
+		textHuespedDni.setBounds(125, 185, 86, 20);
 		panelHuespedIzquierda.add(textHuespedDni);
 		textHuespedDni.setColumns(10);
 		
 		textHuespedApellidos = new JTextField();
-		textHuespedApellidos.setBounds(100, 163, 265, 20);
+		textHuespedApellidos.setBounds(125, 160, 188, 20);
 		panelHuespedIzquierda.add(textHuespedApellidos);
 		textHuespedApellidos.setColumns(10);
 		
 		textHuespedNumeroGrupo = new JTextField();
-		textHuespedNumeroGrupo.setBounds(100, 263, 86, 20);
+		textHuespedNumeroGrupo.setBounds(125, 260, 86, 20);
 		panelHuespedIzquierda.add(textHuespedNumeroGrupo);
 		textHuespedNumeroGrupo.setColumns(10);
 		
 		textHuespedMatricula = new JTextField();
-		textHuespedMatricula.setBounds(100, 288, 86, 20);
+		textHuespedMatricula.setBounds(125, 285, 86, 20);
 		panelHuespedIzquierda.add(textHuespedMatricula);
 		textHuespedMatricula.setColumns(10);
 		
@@ -441,25 +455,25 @@ public class FrmMain extends JFrame {
 		panelParkingIzquierda.add(lblParkingMatricula);
 		
 		lblParkingDni = new JLabel("Dni del Huesped:");
-		lblParkingDni.setBounds(10, 191, 81, 14);
+		lblParkingDni.setBounds(10, 191, 105, 14);
 		panelParkingIzquierda.add(lblParkingDni);
 		
 		textParkingDni = new JTextField();
-		textParkingDni.setBounds(101, 188, 86, 20);
+		textParkingDni.setBounds(135, 191, 86, 20);
 		panelParkingIzquierda.add(textParkingDni);
 		textParkingDni.setColumns(10);
 		
 		textParkingMatricula = new JTextField();
-		textParkingMatricula.setBounds(101, 163, 86, 20);
+		textParkingMatricula.setBounds(135, 166, 86, 20);
 		panelParkingIzquierda.add(textParkingMatricula);
 		textParkingMatricula.setColumns(10);
 		
 		chcParkingOcupado = new JCheckBox("");
-		chcParkingOcupado.setBounds(101, 137, 97, 23);
+		chcParkingOcupado.setBounds(135, 140, 97, 23);
 		panelParkingIzquierda.add(chcParkingOcupado);
 		
 		textParkingNumero = new JTextField();
-		textParkingNumero.setBounds(101, 113, 86, 20);
+		textParkingNumero.setBounds(135, 116, 86, 20);
 		panelParkingIzquierda.add(textParkingNumero);
 		textParkingNumero.setColumns(10);
 		
