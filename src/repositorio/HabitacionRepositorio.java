@@ -27,7 +27,7 @@ public class HabitacionRepositorio {
             	int camasDobles = rs.getInt("camas_dobles");
             	int piso = rs.getInt("piso");
             	String dni = rs.getString("dni");
-            	boolean ocupado = rs.getBoolean("ocupado");
+            	boolean ocupado = rs.getBoolean("ocupada");
             	
             	Habitacion habitacion = new Habitacion(numeroHabitacion, camas, camasDobles, piso, ocupado, dni);
             	habitaciones.add(habitacion);

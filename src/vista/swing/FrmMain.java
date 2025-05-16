@@ -3,6 +3,7 @@ package vista.swing;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
 
 import modelo.Habitacion;
 import modelo.Huesped;
@@ -54,7 +55,9 @@ public class FrmMain extends JFrame {
 	private JTextField textHuespedNuevoNumeroHabitacion;
 	private JLabel lblHuespedNuevoNombre, lblHuespedNuevoApellidos, lblHuespedNuevoDni, lblHuespedNuevoFechaEntrada, lblHuespedNuevoFechaSalida, lblHuespedNuevoMatricula;
 	private JTextField textHuespedNuevoFechaEntrada, textHuespedNuevoFechaSalida, textHuespedNuevoDni, textHuespedNuevoApellidos, textHuespedNuevoNombre, textHuespedNuevoMatricula;
-
+	
+	DefaultTableModel dtm;
+	
 	HabitacionService HaS = new HabitacionService();
 	HuespedService HuS = new HuespedService();
 	ParkingService PaS = new ParkingService();
@@ -64,6 +67,7 @@ public class FrmMain extends JFrame {
 	List<Parking> parkings = new ArrayList<>();
 	
 	int puntero = 0;
+	int tamaño;
 	
 	public FrmMain() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -76,7 +80,8 @@ public class FrmMain extends JFrame {
 		
 		definirVentana();
 		definirEventos();
-		cargarHabitacion();
+		mostrarHabitacion(puntero);
+		cargarGridHabitacion();
 		
 		
 		this.setVisible(true);
@@ -84,9 +89,50 @@ public class FrmMain extends JFrame {
 
 
 
-	private void cargarHabitacion() {
+	private void cargarGridHabitacion() {
 		
 		habitaciones = HaS.obtenerHabitaciones();
+		
+		String[] titulos = {"Nº", "Camas", "Camas Dobles", "Ocupada", "Dni Huesped"};
+		dtm.setRowCount(0);
+		dtm.setColumnCount(0);
+		dtm.setColumnIdentifiers(titulos);
+		String estadoOcupado = "";
+		String dni = "";
+		
+		for(Habitacion h: habitaciones) {
+			
+			if(h.isOcupada()) {
+				estadoOcupado = "Sí";
+				dni = h.getDniHuesped();
+			}else {
+				estadoOcupado = "No";
+				dni = "";
+			}
+			
+			Object[] fila = {h.getNumeroHabitacion(), h.getCamas(), h.getCamasDoble(), estadoOcupado, dni};
+			dtm.addRow(fila);
+		}
+
+	}
+
+
+
+	private void mostrarHabitacion(int puntero) {
+		
+		habitaciones = HaS.obtenerHabitaciones();
+		Habitacion habitacion = habitaciones.get(puntero);
+		textHabitacionNumero.setText(String.valueOf(habitacion.getNumeroHabitacion()));
+		textHabitacionPiso.setText(String.valueOf(habitacion.getPiso()));
+		textHabitacionCamas.setText(String.valueOf(habitacion.getCamas()));
+		textHabitacionCamasDobles.setText(String.valueOf(habitacion.getCamasDoble()));
+		textHabitacionDni.setText(habitacion.getDniHuesped());
+		if(habitacion.isOcupada()) {
+			chcHabitacionOcupada.setSelected(true);
+		}else {
+			chcHabitacionOcupada.setSelected(false);
+		}
+		
 		
 	}
 
@@ -101,6 +147,7 @@ public class FrmMain extends JFrame {
 				layeredPanelIzquierda.add(panelHabitacionIzquierda);
 				layeredPanelIzquierda.repaint();
 				layeredPanelIzquierda.revalidate();
+				mostrarHabitacion(puntero = 0);
 				
 				layeredPanelDerecha.removeAll();
 				layeredPanelDerecha.add(panelHabitacionDerecha);
@@ -138,6 +185,45 @@ public class FrmMain extends JFrame {
 				layeredPanelDerecha.add(panelHuespedDerecha);
 				layeredPanelIzquierda.repaint();
 				layeredPanelIzquierda.revalidate();
+			}
+		});
+		
+		btnHabitacionPrincipio.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				puntero = 0;
+				mostrarHabitacion(puntero);
+			}
+		});
+		
+		btnHabitacionIzquierda.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				if(puntero - 1 >= 0) {
+					puntero--;
+					mostrarHabitacion(puntero);
+				}
+				
+			}
+		});
+		
+		btnHabitacionDerecha.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				tamaño = habitaciones.size();
+				if(puntero + 1 < tamaño) {
+					puntero++;
+					mostrarHabitacion(puntero);
+				}
+			}
+		});
+		
+		btnHabitacionFinal.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				tamaño = habitaciones.size();
+				puntero = tamaño-1;
+				mostrarHabitacion(puntero);
+				
 			}
 		});
 	}
@@ -489,7 +575,9 @@ public class FrmMain extends JFrame {
 		JScrollPane scrollPane = new JScrollPane();
 		panelHabitacionDerecha.add(scrollPane, BorderLayout.CENTER);
 		
-		tableHabitacion = new JTable();
+		dtm = new DefaultTableModel();
+		tableHabitacion = new JTable(dtm);
+		tableHabitacion.setEnabled(false);
 		scrollPane.setViewportView(tableHabitacion);
 		
 		panelHuespedDerecha = new JPanel();
