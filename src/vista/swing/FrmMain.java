@@ -14,6 +14,9 @@ import servicio.ParkingService;
 
 import javax.swing.JButton;
 import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.GridLayout;
+
 import javax.swing.JLayeredPane;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
@@ -23,6 +26,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JComboBox;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.awt.event.ActionEvent;
@@ -182,9 +186,50 @@ public class FrmMain extends JFrame {
 				layeredPanelIzquierda.revalidate();
 				
 				layeredPanelDerecha.removeAll();
-				layeredPanelDerecha.add(panelHuespedDerecha);
+				layeredPanelDerecha.add(panelParkingDerecha);
 				layeredPanelIzquierda.repaint();
 				layeredPanelIzquierda.revalidate();
+				
+				try {
+					cargarParking();
+				} catch (SQLException e1) {
+					e1.printStackTrace();
+				}
+			}
+
+			private void cargarParking() throws SQLException {
+				parkings = PaS.obtenerParking();
+				
+				puntero = 0;
+				Parking parking;
+				for (int i = 1; i <= 20; i++) {
+					parking = parkings.get(puntero);
+					puntero++;
+					JButton parkingBoton = new JButton("Parking "+i);
+					if(parking.isOcupado()) {
+						parkingBoton.setBackground(Color.RED);
+					}else {
+						parkingBoton.setBackground(Color.GREEN);
+					}
+		            parkingBoton.addActionListener(new ActionListener() {
+		                public void actionPerformed(ActionEvent e) {
+		                	puntero = Integer.parseInt(parkingBoton.getText().substring(8))-1;
+							Parking parking = parkings.get(puntero);
+		                	textParkingMatricula.setText(parking.getMatricula());
+		                	textParkingNumero.setText(String.valueOf(parking.getNumeroParking()));
+		                	textParkingDni.setText(parking.getDniHuesped());
+		                	if(parking.isOcupado()) {
+		                		chcParkingOcupado.setSelected(true);
+		                	}else{
+		                		chcParkingOcupado.setSelected(false);
+		                	}
+		                	
+		                }
+		            });
+		            
+		            panelParkingDerecha.add(parkingBoton);
+				}
+				
 			}
 		});
 		
@@ -591,6 +636,7 @@ public class FrmMain extends JFrame {
 		scrollPane_1.setViewportView(tableHuesped);
 		
 		panelParkingDerecha = new JPanel();
+		panelParkingDerecha.setLayout(new GridLayout(5, 4));
 		layeredPanelDerecha.add(panelParkingDerecha, "name_1128781942283400");
 	}
 }
