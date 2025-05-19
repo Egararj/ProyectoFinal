@@ -1,5 +1,7 @@
 package vista;
 
+import java.sql.SQLException;
+
 import vista.swing.FrmMain;
 
 public class Main {
@@ -8,7 +10,7 @@ public class Main {
 		
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws SQLException {
 
 		FrmMain frame = new FrmMain();
 

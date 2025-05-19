@@ -1,9 +1,58 @@
 package repositorio;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.time.LocalDate;
+
+import dao.DbConnection;
+import excepciones.CampoVacioException;
+import excepciones.DniException;
+import excepciones.FechaException;
+import excepciones.NumeroException;
+import modelo.Huesped;
+
 public class HuespedRepositorio {
 
 	public HuespedRepositorio() {
-		// TODO Auto-generated constructor stub
+	}
+
+	public List<Huesped> obtenerHuesped() throws SQLException, CampoVacioException, DniException, FechaException, NumeroException {
+		
+		String sql = "SELECT * FROM huesped";
+		List<Huesped> huespedes = new ArrayList<>();
+		
+		try(Connection conn = DbConnection.getConnection();
+			PreparedStatement pr = conn.prepareStatement(sql);
+			ResultSet rs = pr.executeQuery()){
+			
+			while(rs.next()) {
+				
+				String numeroHabitacion = rs.getString("numero_habitacion").toString();
+				String nombre = rs.getString("nombre");
+				String apellidos = rs.getString("apellidos");
+				String dni = rs.getString("dni");
+				String numeroGrupo = rs.getString("numero_grupo").toString();
+				String matricula = rs.getString("matricula");
+				String fechaEntrada = rs.getDate("fecha_entrada").toString();
+				String fechaSalida = rs.getDate("fecha_salida").toString();
+				
+				if (matricula == null) {
+					Huesped huesped = new Huesped(nombre, apellidos, dni, numeroGrupo, fechaEntrada, fechaSalida, numeroHabitacion);
+					huespedes.add(huesped);
+				}else {
+					Huesped huesped = new Huesped(nombre, apellidos, dni, numeroGrupo, matricula, fechaEntrada, fechaSalida, numeroHabitacion);
+					huespedes.add(huesped);
+				}		
+			}			
+		}catch(Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		return huespedes;
 	}
 
 }

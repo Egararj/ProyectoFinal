@@ -5,6 +5,10 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
+import excepciones.CampoVacioException;
+import excepciones.DniException;
+import excepciones.FechaException;
+import excepciones.NumeroException;
 import modelo.Habitacion;
 import modelo.Huesped;
 import modelo.Parking;
@@ -18,6 +22,7 @@ import java.awt.Color;
 import java.awt.GridLayout;
 
 import javax.swing.JLayeredPane;
+import javax.swing.JOptionPane;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.JCheckBox;
@@ -59,6 +64,7 @@ public class FrmMain extends JFrame {
 	private JTextField textHuespedNuevoNumeroHabitacion;
 	private JLabel lblHuespedNuevoNombre, lblHuespedNuevoApellidos, lblHuespedNuevoDni, lblHuespedNuevoFechaEntrada, lblHuespedNuevoFechaSalida, lblHuespedNuevoMatricula;
 	private JTextField textHuespedNuevoFechaEntrada, textHuespedNuevoFechaSalida, textHuespedNuevoDni, textHuespedNuevoApellidos, textHuespedNuevoNombre, textHuespedNuevoMatricula;
+	private JButton btnHuespedPrincipio, btnHuespedIzquierda, btnHuespedDerecha, btnHuespedFinal;
 	
 	DefaultTableModel dtm;
 	
@@ -70,10 +76,14 @@ public class FrmMain extends JFrame {
 	List<Huesped> huespedes = new ArrayList<>();
 	List<Parking> parkings = new ArrayList<>();
 	
+	String estado = "";
+	int nuevoNumeroGrupo;
 	int puntero = 0;
 	int tamaño;
+	boolean b = true;
+	boolean nuevoParking = false;
 	
-	public FrmMain() {
+	public FrmMain() throws SQLException {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1000, 650);
 		panelPrincipal = new JPanel();
@@ -119,11 +129,55 @@ public class FrmMain extends JFrame {
 		}
 
 	}
+	
+	private void cargarGridHuesped() throws SQLException, CampoVacioException, DniException, FechaException, NumeroException {
+
+		huespedes = HuS.obtenerHuesped();
+		
+		String[] titulos = {"Nº Hab", "Nombre", "Dni", "F.Entrada","F.Salida"};
+		dtm.setRowCount(0);
+		dtm.setColumnCount(0);
+		dtm.setColumnIdentifiers(titulos);
+		
+		for(Huesped h: huespedes) {
+			String entrada = h.getFechaEntrada().toString();
+			String salida = h.getFechaSalida().toString();
+			Object[] fila = {h.getNumeroHabitacion(), h.getNombre(), h.getDniHuesped(), entrada, salida};
+			dtm.addRow(fila);
+		}
+		
+	}
+	
+	private boolean cargarHabitacionesDisponibles(int nuevoNumeroGrupo){
+		
+		boolean sinHabitaciones = true;
+		habitaciones = HaS.obtenerHabitaciones();
+		
+		String[] titulos = {"Nº Hab", "Camas", "Camas Dobles", "Max Huesped","Piso"};
+		dtm.setRowCount(0);
+		dtm.setColumnCount(0);
+		dtm.setColumnIdentifiers(titulos);
+		
+		for(Habitacion h: habitaciones) {
+			int camas = h.getCamas();
+			int camasDobles = h.getCamasDoble()*2;
+			int maxTotal = camas + camasDobles;
+			
+			if(!h.isOcupada() && maxTotal >= nuevoNumeroGrupo) {
+			Object[] fila = {h.getNumeroHabitacion(), h.getCamas(), h.getCamasDoble(), maxTotal, h.getPiso()};
+			dtm.addRow(fila);
+			sinHabitaciones = false;
+			}
+		}
+		
+		return sinHabitaciones;
+	}
 
 
 
 	private void mostrarHabitacion(int puntero) {
 		
+		habitaciones = null;
 		habitaciones = HaS.obtenerHabitaciones();
 		Habitacion habitacion = habitaciones.get(puntero);
 		textHabitacionNumero.setText(String.valueOf(habitacion.getNumeroHabitacion()));
@@ -137,6 +191,36 @@ public class FrmMain extends JFrame {
 			chcHabitacionOcupada.setSelected(false);
 		}
 		
+		
+	}
+	
+	private void mostrarHuesped(int puntero) throws SQLException, CampoVacioException, DniException, FechaException, NumeroException {
+		
+		huespedes = null;
+		huespedes = HuS.obtenerHuesped();
+		Huesped huesped = huespedes.get(puntero);
+		textHuespedNumeroHabitacion.setText(String.valueOf(huesped.getNumeroHabitacion()));
+		textHuespedNombre.setText(huesped.getNombre());
+		textHuespedApellidos.setText(huesped.getApellidos());
+		textHuespedDni.setText(huesped.getDniHuesped());
+		textHuespedFechaEntrada.setText(huesped.getFechaEntrada().toString());
+		textHuespedFechaSalida.setText(huesped.getFechaSalida().toString());
+		textHuespedNumeroGrupo.setText(String.valueOf(huesped.getNumeroGrupo()));
+		if(huesped.getMatricula() == null) {
+			textHuespedMatricula.setText("");
+		}else {
+			textHuespedMatricula.setText(huesped.getMatricula());
+		}
+		
+	}
+	
+	private void habilitarBotonesHuesped(boolean b) {
+		
+		btnHuespedNuevo.setEnabled(b);
+		btnHuespedEditar.setEnabled(b);
+		btnHuespedBorrar.setEnabled(b);
+		btnHuespedConfirmar.setEnabled(!b);
+		btnHuespedDeshacer.setEnabled(!b);
 		
 	}
 
@@ -157,6 +241,7 @@ public class FrmMain extends JFrame {
 				layeredPanelDerecha.add(panelHabitacionDerecha);
 				layeredPanelIzquierda.repaint();
 				layeredPanelIzquierda.revalidate();
+				cargarGridHabitacion();
 				
 			}
 		});
@@ -168,13 +253,28 @@ public class FrmMain extends JFrame {
 				layeredPanelIzquierda.add(panelHuespedIzquierda);
 				layeredPanelIzquierda.repaint();
 				layeredPanelIzquierda.revalidate();
+				try {
+					mostrarHuesped(puntero = 0);
+				} catch (SQLException | CampoVacioException | DniException | FechaException | NumeroException e1) {
+					e1.printStackTrace();
+				}
 				
 				layeredPanelDerecha.removeAll();
 				layeredPanelDerecha.add(panelHuespedDerecha);
 				layeredPanelIzquierda.repaint();
 				layeredPanelIzquierda.revalidate();
+				try {
+					cargarGridHuesped();
+				} catch (SQLException | CampoVacioException | DniException | FechaException | NumeroException e1) {
+					e1.printStackTrace();
+				}
+				
+				habilitarBotonesHuesped(b);
 				
 			}
+
+
+			
 		});
 		
 		btnParking.addActionListener(new ActionListener() {
@@ -198,6 +298,7 @@ public class FrmMain extends JFrame {
 			}
 
 			private void cargarParking() throws SQLException {
+				parkings = null;
 				parkings = PaS.obtenerParking();
 				
 				puntero = 0;
@@ -227,7 +328,6 @@ public class FrmMain extends JFrame {
 		                }
 		            });
 		            
-		            panelParkingDerecha.add(parkingBoton);
 				}
 				
 			}
@@ -271,12 +371,153 @@ public class FrmMain extends JFrame {
 				
 			}
 		});
+		
+		btnHuespedPrincipio.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				puntero = 0;
+				try {
+					mostrarHuesped(puntero);
+				} catch (SQLException | CampoVacioException | DniException | FechaException | NumeroException e1) {
+					e1.printStackTrace();
+				}
+			}
+		});
+		
+		btnHuespedIzquierda.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				if(puntero - 1 >= 0) {
+					puntero--;
+					try {
+						mostrarHuesped(puntero);
+					} catch (SQLException | CampoVacioException | DniException | FechaException | NumeroException e1) {
+						e1.printStackTrace();
+					}
+				}
+			}
+		});
+		
+		btnHuespedDerecha.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				tamaño = huespedes.size();
+				if(puntero + 1 < tamaño) {
+					puntero++;
+					try {
+						mostrarHuesped(puntero);
+					} catch (SQLException | CampoVacioException | DniException | FechaException | NumeroException e1) {
+						e1.printStackTrace();
+					}
+				}
+			}
+		});
+		
+		btnHuespedFinal.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				tamaño = huespedes.size();
+				puntero = tamaño-1;
+				try {
+					mostrarHuesped(puntero);
+				} catch (SQLException | CampoVacioException | DniException | FechaException | NumeroException e1) {
+					e1.printStackTrace();
+				}
+			}
+		});
+		
+		btnHuespedNuevo.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				habilitarBotonesHuesped(!b);
+				estado = "nuevo";
+				
+				layeredPanelHuespedNuevo.removeAll();
+				layeredPanelHuespedNuevo.add(panelHuespedNuevoGrupo);
+				layeredPanelHuespedNuevo.repaint();
+				layeredPanelHuespedNuevo.revalidate();
+				
+				
+			}
+		});
+		
+		btnHuespedConfirmar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				switch (estado){
+				
+				case "nuevo":
+
+					try {
+						 nuevoNumeroGrupo = Integer.parseInt(textHuespedNuevoNumeroGrupo.getText());
+						 if (nuevoNumeroGrupo <= 0) {
+							 throw new Exception();
+					}
+					}catch(Exception e1) {
+					     JOptionPane.showMessageDialog(null, "El valor no puede ser menor que 0");
+					     break;
+					}
+					
+					nuevoParking = chcHuespedNuevoParking.isSelected();
+					
+					boolean sinHabitaciones = cargarHabitacionesDisponibles(nuevoNumeroGrupo);
+					
+					if(sinHabitaciones) {
+					     JOptionPane.showMessageDialog(null, "No hay ninguna habitación para este número de grupo");
+					     break;
+					}
+					
+					layeredPanelHuespedNuevo.removeAll();
+					layeredPanelHuespedNuevo.add(panelHuespedNuevoHabitacion);
+					layeredPanelHuespedNuevo.repaint();
+					layeredPanelHuespedNuevo.revalidate();
+					estado = "habitacion";
+					break;
+				
+				case "habitacion":
+					try {
+					int nuevaHabitacion = Integer.parseInt(textHuespedNuevoNumeroHabitacion.getText());
+					}catch(Exception e1) {
+					     JOptionPane.showMessageDialog(null, "Numero de habitacón incorrecto");
+					     break;
+					}
+					
+					
+					break;
+
+				}
+			}
+
+
+		});
+		
+		btnHuespedDeshacer.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				switch (estado) {
+				
+				case "nuevo":
+					
+					habilitarBotonesHuesped(b);
+					try {
+						cargarGridHuesped();
+					} catch (SQLException | CampoVacioException | DniException | FechaException | NumeroException e1) {
+						e1.printStackTrace();
+					}
+					
+					layeredPanelHuespedNuevo.removeAll();
+					layeredPanelHuespedNuevo.add(panelHuespedNuevoVacio);
+					layeredPanelHuespedNuevo.repaint();
+					layeredPanelHuespedNuevo.revalidate();			
+					break;
+				
+				}
+			}
+		});
 	}
 
 
 
 
-	private void definirVentana() {
+	private void definirVentana() throws SQLException {
 	
 		btnHabitacion = new JButton("Habitacion");
 		btnHabitacion.setBounds(23, 11, 173, 56);
@@ -291,7 +532,7 @@ public class FrmMain extends JFrame {
 		panelPrincipal.add(btnParking);
 		
 		btnSalir = new JButton("Salir");
-		btnSalir.setBounds(722, 11, 173, 56);
+		btnSalir.setBounds(750, 11, 173, 56);
 		panelPrincipal.add(btnSalir);
 		
 		layeredPanelIzquierda = new JLayeredPane();
@@ -347,30 +588,36 @@ public class FrmMain extends JFrame {
 		textHabitacionNumero.setBounds(208, 116, 86, 20);
 		panelHabitacionIzquierda.add(textHabitacionNumero);
 		textHabitacionNumero.setColumns(10);
+		textHabitacionNumero.setEditable(false);
 		
 		textHabitacionCamas = new JTextField();
 		textHabitacionCamas.setBounds(208, 141, 86, 20);
 		panelHabitacionIzquierda.add(textHabitacionCamas);
 		textHabitacionCamas.setColumns(10);
+		textHabitacionCamas.setEditable(false);
 		
 		textHabitacionCamasDobles = new JTextField();
 		textHabitacionCamasDobles.setBounds(208, 166, 86, 20);
 		panelHabitacionIzquierda.add(textHabitacionCamasDobles);
 		textHabitacionCamasDobles.setColumns(10);
+		textHabitacionCamasDobles.setEditable(false);
 		
 		textHabitacionPiso = new JTextField();
 		textHabitacionPiso.setBounds(208, 194, 86, 20);
 		panelHabitacionIzquierda.add(textHabitacionPiso);
 		textHabitacionPiso.setColumns(10);
+		textHabitacionPiso.setEditable(false);
 		
 		textHabitacionDni = new JTextField();
 		textHabitacionDni.setBounds(208, 241, 86, 20);
 		panelHabitacionIzquierda.add(textHabitacionDni);
 		textHabitacionDni.setColumns(10);
+		textHabitacionDni.setEditable(false);
 		
 		chcHabitacionOcupada = new JCheckBox("Ocupada");
 		chcHabitacionOcupada.setBounds(208, 215, 86, 23);
 		panelHabitacionIzquierda.add(chcHabitacionOcupada);
+		chcHabitacionOcupada.setEnabled(false);
 		
 		panelHuespedIzquierda = new JPanel();
 		layeredPanelIzquierda.add(panelHuespedIzquierda, "name_1128142952090800");
@@ -432,41 +679,49 @@ public class FrmMain extends JFrame {
 		textHuespedFechaEntrada.setBounds(125, 210, 86, 20);
 		panelHuespedIzquierda.add(textHuespedFechaEntrada);
 		textHuespedFechaEntrada.setColumns(10);
+		textHuespedFechaEntrada.setEditable(false);
 		
 		textHuespedFechaSalida = new JTextField();
 		textHuespedFechaSalida.setColumns(10);
 		textHuespedFechaSalida.setBounds(125, 235, 86, 20);
 		panelHuespedIzquierda.add(textHuespedFechaSalida);
+		textHuespedFechaSalida.setEditable(false);
 		
 		textHuespedNumeroHabitacion = new JTextField();
 		textHuespedNumeroHabitacion.setColumns(10);
 		textHuespedNumeroHabitacion.setBounds(125, 110, 86, 20);
 		panelHuespedIzquierda.add(textHuespedNumeroHabitacion);
+		textHuespedNumeroHabitacion.setEditable(false);
 		
 		textHuespedNombre = new JTextField();
 		textHuespedNombre.setColumns(10);
 		textHuespedNombre.setBounds(125, 135, 130, 20);
 		panelHuespedIzquierda.add(textHuespedNombre);
+		textHuespedNombre.setEditable(false);
 		
 		textHuespedDni = new JTextField();
 		textHuespedDni.setBounds(125, 185, 86, 20);
 		panelHuespedIzquierda.add(textHuespedDni);
 		textHuespedDni.setColumns(10);
+		textHuespedDni.setEditable(false);
 		
 		textHuespedApellidos = new JTextField();
 		textHuespedApellidos.setBounds(125, 160, 188, 20);
 		panelHuespedIzquierda.add(textHuespedApellidos);
 		textHuespedApellidos.setColumns(10);
+		textHuespedApellidos.setEditable(false);
 		
 		textHuespedNumeroGrupo = new JTextField();
 		textHuespedNumeroGrupo.setBounds(125, 260, 86, 20);
 		panelHuespedIzquierda.add(textHuespedNumeroGrupo);
 		textHuespedNumeroGrupo.setColumns(10);
+		textHuespedNumeroGrupo.setEditable(false);
 		
 		textHuespedMatricula = new JTextField();
 		textHuespedMatricula.setBounds(125, 285, 86, 20);
 		panelHuespedIzquierda.add(textHuespedMatricula);
 		textHuespedMatricula.setColumns(10);
+		textHuespedMatricula.setEditable(false);
 		
 		layeredPanelHuespedNuevo = new JLayeredPane();
 		layeredPanelHuespedNuevo.setBounds(10, 316, 396, 158);
@@ -569,6 +824,22 @@ public class FrmMain extends JFrame {
 		panelHuespedNuevoFormulario.add(textHuespedNuevoMatricula);
 		textHuespedNuevoMatricula.setColumns(10);
 		
+		btnHuespedPrincipio = new JButton("Principio");
+		btnHuespedPrincipio.setBounds(10, 71, 89, 23);
+		panelHuespedIzquierda.add(btnHuespedPrincipio);
+		
+		btnHuespedIzquierda = new JButton("Izquierda");
+		btnHuespedIzquierda.setBounds(109, 71, 89, 23);
+		panelHuespedIzquierda.add(btnHuespedIzquierda);
+		
+		btnHuespedDerecha = new JButton("Derecha");
+		btnHuespedDerecha.setBounds(208, 71, 89, 23);
+		panelHuespedIzquierda.add(btnHuespedDerecha);
+		
+		btnHuespedFinal = new JButton("Final");
+		btnHuespedFinal.setBounds(307, 71, 89, 23);
+		panelHuespedIzquierda.add(btnHuespedFinal);
+		
 		panelParkingIzquierda = new JPanel();
 		layeredPanelIzquierda.add(panelParkingIzquierda, "name_1128677725410500");
 		panelParkingIzquierda.setLayout(null);
@@ -593,23 +864,27 @@ public class FrmMain extends JFrame {
 		textParkingDni.setBounds(135, 191, 86, 20);
 		panelParkingIzquierda.add(textParkingDni);
 		textParkingDni.setColumns(10);
+		textParkingDni.setEditable(false);
 		
 		textParkingMatricula = new JTextField();
 		textParkingMatricula.setBounds(135, 166, 86, 20);
 		panelParkingIzquierda.add(textParkingMatricula);
 		textParkingMatricula.setColumns(10);
+		textParkingMatricula.setEditable(false);
 		
 		chcParkingOcupado = new JCheckBox("");
 		chcParkingOcupado.setBounds(135, 140, 97, 23);
 		panelParkingIzquierda.add(chcParkingOcupado);
+		chcParkingOcupado.setEnabled(false);
 		
 		textParkingNumero = new JTextField();
 		textParkingNumero.setBounds(135, 116, 86, 20);
 		panelParkingIzquierda.add(textParkingNumero);
 		textParkingNumero.setColumns(10);
+		textParkingNumero.setEditable(false);
 		
 		layeredPanelDerecha = new JLayeredPane();
-		layeredPanelDerecha.setBounds(479, 115, 416, 485);
+		layeredPanelDerecha.setBounds(479, 115, 444, 485);
 		panelPrincipal.add(layeredPanelDerecha);
 		layeredPanelDerecha.setLayout(new CardLayout(0, 0));
 		
@@ -632,11 +907,46 @@ public class FrmMain extends JFrame {
 		JScrollPane scrollPane_1 = new JScrollPane();
 		panelHuespedDerecha.add(scrollPane_1, BorderLayout.CENTER);
 		
-		tableHuesped = new JTable();
+
+		tableHuesped = new JTable(dtm);
+		tableHuesped.setEnabled(false);
 		scrollPane_1.setViewportView(tableHuesped);
 		
 		panelParkingDerecha = new JPanel();
 		panelParkingDerecha.setLayout(new GridLayout(5, 4));
 		layeredPanelDerecha.add(panelParkingDerecha, "name_1128781942283400");
+		
+		parkings = PaS.obtenerParking();
+		puntero = 0;
+		Parking parking;
+		for (int i = 1; i <= 20; i++) {
+			parking = parkings.get(puntero);
+			puntero++;
+			JButton parkingBoton = new JButton("Parking "+i);
+			if(parking.isOcupado()) {
+				parkingBoton.setBackground(Color.RED);
+			}else {
+				parkingBoton.setBackground(Color.GREEN);
+			}
+            parkingBoton.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                	puntero = Integer.parseInt(parkingBoton.getText().substring(8))-1;
+					Parking parking = parkings.get(puntero);
+                	textParkingMatricula.setText(parking.getMatricula());
+                	textParkingNumero.setText(String.valueOf(parking.getNumeroParking()));
+                	textParkingDni.setText(parking.getDniHuesped());
+                	if(parking.isOcupado()) {
+                		chcParkingOcupado.setSelected(true);
+                	}else{
+                		chcParkingOcupado.setSelected(false);
+                	}
+                	
+                }
+            });
+            
+            panelParkingDerecha.add(parkingBoton);
+		}
+		puntero = 0;
+		
 	}
 }
