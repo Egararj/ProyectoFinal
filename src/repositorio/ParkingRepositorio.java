@@ -52,7 +52,7 @@ public class ParkingRepositorio {
 			PreparedStatement ps = conn.prepareStatement(sql)){
 			
 			ps.setString(1, huesped.getMatricula());
-			ps.setString(2, huesped.getMatricula());
+			ps.setString(2, huesped.getDniHuesped());
 			ps.setBoolean(3, true);
 			ps.setInt(4, huesped.getNumeroHabitacion());
 			

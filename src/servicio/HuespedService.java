@@ -17,7 +17,7 @@ public class HuespedService implements IHuesped{
 
 	public HuespedService() {
 	}
-
+ 
 	@Override
 	public List<Huesped> obtenerHuesped() throws SQLException, CampoVacioException, DniException, FechaException, NumeroException {
 		HuespedRepositorio hr = new HuespedRepositorio();

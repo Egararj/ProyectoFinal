@@ -1,6 +1,7 @@
 package repositorio;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -57,8 +58,7 @@ public class HuespedRepositorio {
 
 	public void nuevoHuesped(Huesped huesped) throws SQLException {
 		
-		String sql = "UPDATE huesped SET nombre=?, apellidos=?, dni=?, matricula=?, fecha_entrada=?, fecha_salida=?, numero_grupo=?"
-				+ "WHERE numero_habitacion = ?";
+		String sql = "INSERT INTO huesped (nombre, apellidos, dni, matricula, fecha_entrada, fecha_salida, numero_grupo, numero_habitacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 		
 		try(Connection conn = DbConnection.getConnection();
 			PreparedStatement ps = conn.prepareStatement(sql)){
@@ -71,8 +71,8 @@ public class HuespedRepositorio {
 			}else {
 				ps.setString(4, null);
 			}
-			ps.setDate(5, java.sql.Date.valueOf(huesped.getFechaEntrada()));
-			ps.setDate(6, java.sql.Date.valueOf(huesped.getFechaSalida()));
+			ps.setDate(5, Date.valueOf(huesped.getFechaEntrada()));
+			ps.setDate(6, Date.valueOf(huesped.getFechaSalida()));
 			ps.setInt(7, huesped.getNumeroGrupo());
 			ps.setInt(8, huesped.getNumeroHabitacion());
 			

@@ -531,7 +531,7 @@ public class FrmMain extends JFrame {
 									textHuespedNuevoDni.getText(), nuevoNumeroGrupo.toString() , textHuespedNuevoMatricula.getText(),
 									textHuespedNuevoFechaEntrada.getText(), textHuespedNuevoFechaSalida.getText(), nuevaHabitacion.toString());
 							HuS.nuevoHuesped(huesped);
-						} catch (CampoVacioException | DniException | FechaException | NumeroException e1) {
+						} catch (CampoVacioException | DniException | FechaException | NumeroException | SQLException e1) {
 							JOptionPane.showMessageDialog(null, "Error en los datos");
 							break;
 						}
@@ -541,15 +541,26 @@ public class FrmMain extends JFrame {
 									textHuespedNuevoDni.getText(), nuevoNumeroGrupo.toString(),
 									textHuespedNuevoFechaEntrada.getText(), textHuespedNuevoFechaSalida.getText(), nuevaHabitacion.toString());
 							HuS.nuevoHuesped(huesped);
-						} catch (CampoVacioException | DniException | FechaException | NumeroException e1) {
+						} catch (CampoVacioException | DniException | FechaException | NumeroException | SQLException e1) {
 							JOptionPane.showMessageDialog(null, "Error en los datos");
 							break;
 						}
 					}
 					JOptionPane.showMessageDialog(null, "Huesped agregado");
 					
+					habilitarBotonesHuesped(b);
+					estado = "nuevo";
 					
 					
+					nuevoNumeroGrupo = null;
+					nuevaHabitacion = null;
+					habitacionesLibres.clear();
+					layeredPanelHuespedNuevo.removeAll();
+					layeredPanelHuespedNuevo.add(panelHuespedNuevoVacio);
+					layeredPanelHuespedNuevo.repaint();
+					layeredPanelHuespedNuevo.revalidate();
+					
+					btnHuesped.doClick();					 
 					break;
 
 				}
@@ -574,6 +585,7 @@ public class FrmMain extends JFrame {
 					
 					nuevoNumeroGrupo = null;
 					nuevaHabitacion = null;
+					habitacionesLibres.clear();
 					layeredPanelHuespedNuevo.removeAll();
 					layeredPanelHuespedNuevo.add(panelHuespedNuevoVacio);
 					layeredPanelHuespedNuevo.repaint();
