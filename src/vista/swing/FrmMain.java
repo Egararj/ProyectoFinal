@@ -75,9 +75,11 @@ public class FrmMain extends JFrame {
 	List<Habitacion> habitaciones = new ArrayList<>();
 	List<Huesped> huespedes = new ArrayList<>();
 	List<Parking> parkings = new ArrayList<>();
+	List<Habitacion> habitacionesLibres = new ArrayList<>();
 	
 	String estado = "";
-	int nuevoNumeroGrupo;
+	Integer nuevoNumeroGrupo;
+	Integer nuevaHabitacion;
 	int puntero = 0;
 	int tamaño;
 	boolean b = true;
@@ -167,6 +169,7 @@ public class FrmMain extends JFrame {
 			Object[] fila = {h.getNumeroHabitacion(), h.getCamas(), h.getCamasDoble(), maxTotal, h.getPiso()};
 			dtm.addRow(fila);
 			sinHabitaciones = false;
+			habitacionesLibres.add(h);
 			}
 		}
 		
@@ -243,6 +246,10 @@ public class FrmMain extends JFrame {
 				layeredPanelIzquierda.revalidate();
 				cargarGridHabitacion();
 				
+				nuevoNumeroGrupo = null;
+				nuevaHabitacion = null;
+				habitacionesLibres.clear();
+				
 			}
 		});
 		
@@ -271,6 +278,10 @@ public class FrmMain extends JFrame {
 				
 				habilitarBotonesHuesped(b);
 				
+				nuevoNumeroGrupo = null;
+				nuevaHabitacion = null;
+				habitacionesLibres.clear();
+				
 			}
 
 
@@ -295,6 +306,10 @@ public class FrmMain extends JFrame {
 				} catch (SQLException e1) {
 					e1.printStackTrace();
 				}
+				
+				nuevoNumeroGrupo = null;
+				nuevaHabitacion = null;
+				habitacionesLibres.clear();
 			}
 
 			private void cargarParking() throws SQLException {
@@ -470,15 +485,69 @@ public class FrmMain extends JFrame {
 					layeredPanelHuespedNuevo.repaint();
 					layeredPanelHuespedNuevo.revalidate();
 					estado = "habitacion";
+					
 					break;
 				
 				case "habitacion":
+					
 					try {
-					int nuevaHabitacion = Integer.parseInt(textHuespedNuevoNumeroHabitacion.getText());
+					nuevaHabitacion = Integer.parseInt(textHuespedNuevoNumeroHabitacion.getText());
 					}catch(Exception e1) {
 					     JOptionPane.showMessageDialog(null, "Numero de habitacón incorrecto");
+					     nuevaHabitacion = null;
 					     break;
 					}
+					boolean existe = false;
+					for(Habitacion h: habitacionesLibres) {
+						if(h.getNumeroHabitacion() == nuevaHabitacion) existe = true;
+					}
+					if(!existe) {
+						JOptionPane.showMessageDialog(null, "Esta habitación no está libre");
+						nuevaHabitacion = null;
+						break;
+					}
+						
+						habitacionesLibres.clear();
+						layeredPanelHuespedNuevo.removeAll();
+						layeredPanelHuespedNuevo.add(panelHuespedNuevoFormulario);
+						layeredPanelHuespedNuevo.repaint();
+						layeredPanelHuespedNuevo.revalidate();
+						
+						if(chcHuespedNuevoParking.isSelected()) 
+							textHuespedNuevoMatricula.setEditable(b);
+						else {
+							textHuespedNuevoMatricula.setEditable(!b);
+						}
+						
+						estado = "formulario";
+					
+					break;
+					
+				case "formulario":
+					
+					if(nuevoParking) {
+						try {
+							Huesped huesped = new Huesped(textHuespedNuevoNombre.getText(), textHuespedNuevoApellidos.getText(),
+									textHuespedNuevoDni.getText(), nuevoNumeroGrupo.toString() , textHuespedNuevoMatricula.getText(),
+									textHuespedNuevoFechaEntrada.getText(), textHuespedNuevoFechaSalida.getText(), nuevaHabitacion.toString());
+							HuS.nuevoHuesped(huesped);
+						} catch (CampoVacioException | DniException | FechaException | NumeroException e1) {
+							JOptionPane.showMessageDialog(null, "Error en los datos");
+							break;
+						}
+					}else {
+						try {
+							Huesped huesped = new Huesped(textHuespedNuevoNombre.getText(), textHuespedNuevoApellidos.getText(),
+									textHuespedNuevoDni.getText(), nuevoNumeroGrupo.toString(),
+									textHuespedNuevoFechaEntrada.getText(), textHuespedNuevoFechaSalida.getText(), nuevaHabitacion.toString());
+							HuS.nuevoHuesped(huesped);
+						} catch (CampoVacioException | DniException | FechaException | NumeroException e1) {
+							JOptionPane.showMessageDialog(null, "Error en los datos");
+							break;
+						}
+					}
+					JOptionPane.showMessageDialog(null, "Huesped agregado");
+					
 					
 					
 					break;
@@ -503,12 +572,34 @@ public class FrmMain extends JFrame {
 						e1.printStackTrace();
 					}
 					
+					nuevoNumeroGrupo = null;
+					nuevaHabitacion = null;
 					layeredPanelHuespedNuevo.removeAll();
 					layeredPanelHuespedNuevo.add(panelHuespedNuevoVacio);
 					layeredPanelHuespedNuevo.repaint();
 					layeredPanelHuespedNuevo.revalidate();			
 					break;
-				
+					
+				case "habitacion":
+					
+					nuevoNumeroGrupo = null;
+					nuevaHabitacion = null;
+					habitacionesLibres.clear();
+					layeredPanelHuespedNuevo.removeAll();
+					layeredPanelHuespedNuevo.add(panelHuespedNuevoGrupo);
+					layeredPanelHuespedNuevo.repaint();
+					layeredPanelHuespedNuevo.revalidate();
+					estado = "nuevo";
+					break;
+					
+				case "formulario":
+					
+					layeredPanelHuespedNuevo.removeAll();
+					layeredPanelHuespedNuevo.add(panelHuespedNuevoHabitacion);
+					layeredPanelHuespedNuevo.repaint();
+					layeredPanelHuespedNuevo.revalidate();
+					estado = "habitacion";
+					
 				}
 			}
 		});

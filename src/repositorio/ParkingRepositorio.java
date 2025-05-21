@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import dao.DbConnection;
+import modelo.Huesped;
 import modelo.Parking;
 
 public class ParkingRepositorio {
@@ -41,6 +42,24 @@ public class ParkingRepositorio {
 		}
 		
 		return parkings;
+	}
+
+	public void nuevoHuesped(Huesped huesped) throws SQLException {
+
+		String sql = "UPDATE parking SET matricula=?, dni_dueño=?, ocupado=? WHERE numero_parking=?";
+		
+		try(Connection conn = DbConnection.getConnection();
+			PreparedStatement ps = conn.prepareStatement(sql)){
+			
+			ps.setString(1, huesped.getMatricula());
+			ps.setString(2, huesped.getMatricula());
+			ps.setBoolean(3, true);
+			ps.setInt(4, huesped.getNumeroHabitacion());
+			
+			ps.executeUpdate();
+			
+		}
+		
 	}
 
 }

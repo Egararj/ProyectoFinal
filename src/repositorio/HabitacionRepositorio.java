@@ -9,6 +9,7 @@ import java.util.List;
 
 import dao.DbConnection;
 import modelo.Habitacion;
+import modelo.Huesped;
 
 public class HabitacionRepositorio {
 
@@ -38,6 +39,22 @@ public class HabitacionRepositorio {
 		
 		
 		return habitaciones;
+	}
+
+	public void nuevoHuesped(Huesped huesped) throws SQLException {
+
+		String sql = "UPDATE habitacion SET dni=?, ocupada=? WHERE numero_habitacion=?";
+		
+		try(Connection conn = DbConnection.getConnection();
+			PreparedStatement ps = conn.prepareStatement(sql)){
+			
+			ps.setString(1, huesped.getDniHuesped());
+			ps.setBoolean(2, true);
+			ps.setInt(3, huesped.getNumeroHabitacion());
+			
+			ps.executeUpdate();
+			
+		}
 	}
 
 }

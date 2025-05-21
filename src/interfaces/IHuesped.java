@@ -13,4 +13,6 @@ public interface IHuesped {
 
 	List<Huesped> obtenerHuesped() throws SQLException, CampoVacioException, DniException, FechaException, NumeroException;
 	
+	void nuevoHuesped(Huesped huesped) throws SQLException;
+	
 }

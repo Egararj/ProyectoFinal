@@ -55,4 +55,29 @@ public class HuespedRepositorio {
 		return huespedes;
 	}
 
+	public void nuevoHuesped(Huesped huesped) throws SQLException {
+		
+		String sql = "UPDATE huesped SET nombre=?, apellidos=?, dni=?, matricula=?, fecha_entrada=?, fecha_salida=?, numero_grupo=?"
+				+ "WHERE numero_habitacion = ?";
+		
+		try(Connection conn = DbConnection.getConnection();
+			PreparedStatement ps = conn.prepareStatement(sql)){
+			
+			ps.setString(1, huesped.getNombre());
+			ps.setString(2, huesped.getApellidos());
+			ps.setString(3, huesped.getDniHuesped());
+			if(huesped.getMatricula() != null) {
+				ps.setString(4, huesped.getMatricula());
+			}else {
+				ps.setString(4, null);
+			}
+			ps.setDate(5, java.sql.Date.valueOf(huesped.getFechaEntrada()));
+			ps.setDate(6, java.sql.Date.valueOf(huesped.getFechaSalida()));
+			ps.setInt(7, huesped.getNumeroGrupo());
+			ps.setInt(8, huesped.getNumeroHabitacion());
+			
+			ps.executeUpdate();
+		}
+	}
+
 }
