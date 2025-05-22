@@ -20,4 +20,10 @@ public class ParkingService implements IParking{
 		return parkings;
 	}
 
+	@Override
+	public void liberarParking(int puntero) throws SQLException {
+		ParkingRepositorio pr = new ParkingRepositorio();
+		pr.liberarParking(puntero);
+	}
+
 }

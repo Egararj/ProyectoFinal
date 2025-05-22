@@ -57,4 +57,20 @@ public class HabitacionRepositorio {
 		}
 	}
 
+	public void liberarHabitacion(int puntero) throws SQLException {
+		
+		String sql = "UPDATE habitacion SET dni=?, ocupada=? WHERE numero_habitacion=?";
+		
+		try(Connection conn = DbConnection.getConnection();
+				PreparedStatement ps = conn.prepareStatement(sql)){
+				
+				ps.setString(1, null);
+				ps.setBoolean(2, false);
+				ps.setInt(3, puntero);
+				
+				ps.executeUpdate();
+				
+			}
+	}
+
 }

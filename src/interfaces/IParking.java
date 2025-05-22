@@ -8,5 +8,7 @@ import modelo.Parking;
 public interface IParking {
 	
 	List<Parking> obtenerParking() throws SQLException;
+	
+	void liberarParking(int puntero) throws SQLException;
 
 }

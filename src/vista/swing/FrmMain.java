@@ -15,7 +15,9 @@ import modelo.Parking;
 import servicio.HabitacionService;
 import servicio.HuespedService;
 import servicio.ParkingService;
+import utilidades.CompruebaFecha;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -29,9 +31,9 @@ import javax.swing.JCheckBox;
 import java.awt.BorderLayout;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.JComboBox;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.awt.event.ActionEvent;
@@ -65,6 +67,7 @@ public class FrmMain extends JFrame {
 	private JLabel lblHuespedNuevoNombre, lblHuespedNuevoApellidos, lblHuespedNuevoDni, lblHuespedNuevoFechaEntrada, lblHuespedNuevoFechaSalida, lblHuespedNuevoMatricula;
 	private JTextField textHuespedNuevoFechaEntrada, textHuespedNuevoFechaSalida, textHuespedNuevoDni, textHuespedNuevoApellidos, textHuespedNuevoNombre, textHuespedNuevoMatricula;
 	private JButton btnHuespedPrincipio, btnHuespedIzquierda, btnHuespedDerecha, btnHuespedFinal;
+	private ImageIcon nuevo, editar, borrar, guardar, deshacer, primero, izquierda, derecha, ultimo;
 	
 	DefaultTableModel dtm;
 	
@@ -77,9 +80,14 @@ public class FrmMain extends JFrame {
 	List<Parking> parkings = new ArrayList<>();
 	List<Habitacion> habitacionesLibres = new ArrayList<>();
 	
+	String fechaEntradaActual = "";
+	String fechaSalidaActual = "";
+	String nuevaFecha = "";
 	String estado = "";
 	Integer nuevoNumeroGrupo;
 	Integer nuevaHabitacion;
+	LocalDate nuevaFechaEntrada = null;
+	LocalDate nuevaFechaSalida = null;
 	int puntero = 0;
 	int tamaño;
 	boolean b = true;
@@ -87,7 +95,7 @@ public class FrmMain extends JFrame {
 	
 	public FrmMain() throws SQLException {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 1000, 650);
+		setBounds(100, 100, 1065, 737);
 		panelPrincipal = new JPanel();
 		panelPrincipal.setBorder(new EmptyBorder(5, 5, 5, 5));
 
@@ -183,17 +191,17 @@ public class FrmMain extends JFrame {
 		habitaciones = null;
 		habitaciones = HaS.obtenerHabitaciones();
 		Habitacion habitacion = habitaciones.get(puntero);
-		textHabitacionNumero.setText(String.valueOf(habitacion.getNumeroHabitacion()));
-		textHabitacionPiso.setText(String.valueOf(habitacion.getPiso()));
-		textHabitacionCamas.setText(String.valueOf(habitacion.getCamas()));
-		textHabitacionCamasDobles.setText(String.valueOf(habitacion.getCamasDoble()));
-		textHabitacionDni.setText(habitacion.getDniHuesped());
 		if(habitacion.isOcupada()) {
 			chcHabitacionOcupada.setSelected(true);
+			textHabitacionDni.setText(habitacion.getDniHuesped());
 		}else {
 			chcHabitacionOcupada.setSelected(false);
+			textHabitacionDni.setText("");
 		}
-		
+		textHabitacionCamas.setText(String.valueOf(habitacion.getCamas()));
+		textHabitacionCamasDobles.setText(String.valueOf(habitacion.getCamasDoble()));
+		textHabitacionNumero.setText(String.valueOf(habitacion.getNumeroHabitacion()));
+		textHabitacionPiso.setText(String.valueOf(habitacion.getPiso()));
 		
 	}
 	
@@ -225,6 +233,14 @@ public class FrmMain extends JFrame {
 		btnHuespedConfirmar.setEnabled(!b);
 		btnHuespedDeshacer.setEnabled(!b);
 		
+	}
+	
+	private void habilitarBotonesNavegador(boolean b) {
+		
+		btnHuespedPrincipio.setEnabled(b);
+		btnHuespedIzquierda.setEnabled(b);
+		btnHuespedDerecha.setEnabled(b);
+		btnHuespedFinal.setEnabled(b);
 	}
 
 
@@ -277,10 +293,14 @@ public class FrmMain extends JFrame {
 				}
 				
 				habilitarBotonesHuesped(b);
+				habilitarBotonesNavegador(b);
 				
 				nuevoNumeroGrupo = null;
 				nuevaHabitacion = null;
 				habitacionesLibres.clear();
+				
+				textHuespedFechaEntrada.setEditable(!b);
+				textHuespedFechaSalida.setEditable(!b);
 				
 			}
 
@@ -298,8 +318,12 @@ public class FrmMain extends JFrame {
 				
 				layeredPanelDerecha.removeAll();
 				layeredPanelDerecha.add(panelParkingDerecha);
-				layeredPanelIzquierda.repaint();
-				layeredPanelIzquierda.revalidate();
+				layeredPanelDerecha.repaint();
+				layeredPanelDerecha.revalidate();
+				
+				panelParkingDerecha.removeAll();
+				panelParkingDerecha.repaint();
+				panelParkingDerecha.revalidate();
 				
 				try {
 					cargarParking();
@@ -342,7 +366,7 @@ public class FrmMain extends JFrame {
 		                	
 		                }
 		            });
-		            
+		            panelParkingDerecha.add(parkingBoton);
 				}
 				
 			}
@@ -562,7 +586,38 @@ public class FrmMain extends JFrame {
 					
 					btnHuesped.doClick();					 
 					break;
+					
+				case "editar":
+					int numeroHabitacion = Integer.parseInt(textHuespedNumeroHabitacion.getText());
 
+					try {
+						nuevaFecha = textHuespedFechaEntrada.getText();
+						nuevaFechaEntrada = CompruebaFecha.CompruebaFecha(nuevaFecha);
+						nuevaFecha = textHuespedFechaSalida.getText();
+						nuevaFechaSalida = CompruebaFecha.CompruebaFecha(nuevaFecha);	
+						if (nuevaFechaEntrada.isAfter(nuevaFechaSalida)) {
+							JOptionPane.showMessageDialog(null, "La fecha de entrada no puede ser mayor que la de salida");
+							textHuespedFechaEntrada.setText(fechaEntradaActual);
+							textHuespedFechaSalida.setText(fechaSalidaActual);
+							break;
+						}
+					} catch (FechaException e1) {
+						JOptionPane.showMessageDialog(null, "Fecha erronea. Los valores deben ser correctos y del fromato YYYY-MM-DD");
+						textHuespedFechaEntrada.setText(fechaEntradaActual);
+						textHuespedFechaSalida.setText(fechaSalidaActual);
+						break;
+					}
+					
+					try {
+						HuS.editarFecha(nuevaFechaEntrada, nuevaFechaSalida, numeroHabitacion);
+					} catch (SQLException e1) {
+						e1.printStackTrace();
+						break;
+					}
+					JOptionPane.showMessageDialog(null, "Fecha cambiada");
+					
+					btnHuesped.doClick();
+					break;
 				}
 			}
 
@@ -612,7 +667,75 @@ public class FrmMain extends JFrame {
 					layeredPanelHuespedNuevo.revalidate();
 					estado = "habitacion";
 					
+				case "editar":
+					
+					habilitarBotonesHuesped(b);
+					habilitarBotonesNavegador(b);
+					try {
+						cargarGridHuesped();
+					} catch (SQLException | CampoVacioException | DniException | FechaException | NumeroException e1) {
+						e1.printStackTrace();
+					}
+					
+					nuevoNumeroGrupo = null;
+					nuevaHabitacion = null;
+					habitacionesLibres.clear();
+					layeredPanelHuespedNuevo.removeAll();
+					layeredPanelHuespedNuevo.add(panelHuespedNuevoVacio);
+					layeredPanelHuespedNuevo.repaint();
+					layeredPanelHuespedNuevo.revalidate();	
+					
+					textHuespedFechaEntrada.setEditable(!b);
+					textHuespedFechaSalida.setEditable(!b);
+					break;
+					
 				}
+			}
+		});
+		
+		btnHuespedBorrar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				int opcion = JOptionPane.showConfirmDialog(null, "¿Deseas borrar el huesped?", "Confirmación", JOptionPane.YES_NO_OPTION);			
+				if(opcion == JOptionPane.YES_OPTION) {
+					try {
+						String matricula = textHuespedMatricula.getText();
+						if (matricula.length() > 0) {
+							PaS.liberarParking(puntero+1);
+						}
+						HaS.liberarHabitacion(puntero+1);
+						puntero = Integer.parseInt(textHuespedNumeroHabitacion.getText());
+						HuS.borrarHuesped(puntero);
+					} catch (SQLException e1) {
+						e1.printStackTrace();
+					}
+					btnHuesped.doClick();
+				}
+			}
+		});
+		
+		btnHuespedEditar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				estado = "editar";
+				
+				fechaEntradaActual = textHuespedFechaEntrada.getText();
+				fechaSalidaActual = textHuespedFechaSalida.getText();
+				nuevaFecha = "";
+				
+				textHuespedFechaEntrada.setEditable(b);
+				textHuespedFechaSalida.setEditable(b);
+				habilitarBotonesHuesped(!b);
+				habilitarBotonesNavegador(!b);
+				
+			}
+
+
+		});
+		
+		btnSalir.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
 			}
 		});
 	}
@@ -635,11 +758,11 @@ public class FrmMain extends JFrame {
 		panelPrincipal.add(btnParking);
 		
 		btnSalir = new JButton("Salir");
-		btnSalir.setBounds(750, 11, 173, 56);
+		btnSalir.setBounds(847, 11, 173, 56);
 		panelPrincipal.add(btnSalir);
 		
 		layeredPanelIzquierda = new JLayeredPane();
-		layeredPanelIzquierda.setBounds(23, 115, 416, 485);
+		layeredPanelIzquierda.setBounds(23, 115, 496, 542);
 		panelPrincipal.add(layeredPanelIzquierda);
 		layeredPanelIzquierda.setLayout(new CardLayout(0, 0));
 		
@@ -647,20 +770,24 @@ public class FrmMain extends JFrame {
 		layeredPanelIzquierda.add(panelHabitacionIzquierda, "name_1128073183991500");
 		panelHabitacionIzquierda.setLayout(null);
 		
-		btnHabitacionPrincipio = new JButton("Principio");
-		btnHabitacionPrincipio.setBounds(10, 11, 89, 23);
+		primero = new ImageIcon("imagenes/navPri.jpg");
+		btnHabitacionPrincipio = new JButton(primero);
+		btnHabitacionPrincipio.setBounds(10, 59, 48, 46);
 		panelHabitacionIzquierda.add(btnHabitacionPrincipio);
 		
-		btnHabitacionIzquierda = new JButton("Izquierda");
-		btnHabitacionIzquierda.setBounds(109, 11, 89, 23);
+		izquierda = new ImageIcon("imagenes/navIzq.jpg");
+		btnHabitacionIzquierda = new JButton(izquierda);
+		btnHabitacionIzquierda.setBounds(68, 59, 48, 46);
 		panelHabitacionIzquierda.add(btnHabitacionIzquierda);
 		
-		btnHabitacionDerecha = new JButton("Derecha");
-		btnHabitacionDerecha.setBounds(208, 11, 89, 23);
+		derecha = new ImageIcon("imagenes/navDer.jpg");
+		btnHabitacionDerecha = new JButton(derecha);
+		btnHabitacionDerecha.setBounds(126, 59, 48, 46);
 		panelHabitacionIzquierda.add(btnHabitacionDerecha);
 		
-		btnHabitacionFinal = new JButton("Final");
-		btnHabitacionFinal.setBounds(307, 11, 89, 23);
+		ultimo = new ImageIcon("imagenes/navUlt.jpg");
+		btnHabitacionFinal = new JButton(ultimo);
+		btnHabitacionFinal.setBounds(184, 59, 48, 46);
 		panelHabitacionIzquierda.add(btnHabitacionFinal);
 		
 		lblHabitacionNumero = new JLabel("Nº :");
@@ -726,108 +853,113 @@ public class FrmMain extends JFrame {
 		layeredPanelIzquierda.add(panelHuespedIzquierda, "name_1128142952090800");
 		panelHuespedIzquierda.setLayout(null);
 		
-		btnHuespedNuevo = new JButton("Nuevo");
-		btnHuespedNuevo.setBounds(10, 11, 63, 23);
+		nuevo = new ImageIcon("imagenes/botonAgregar.jpg");
+		btnHuespedNuevo = new JButton(nuevo);
+		btnHuespedNuevo.setBounds(10, 11, 88, 84);
 		panelHuespedIzquierda.add(btnHuespedNuevo);
 		
-		btnHuespedEditar = new JButton("Editar");
-		btnHuespedEditar.setBounds(83, 11, 63, 23);
+		editar = new ImageIcon("imagenes/botonEditar.jpg");
+		btnHuespedEditar = new JButton(editar);
+		btnHuespedEditar.setBounds(108, 11, 88, 84);
 		panelHuespedIzquierda.add(btnHuespedEditar);
 		
-		btnHuespedBorrar = new JButton("Borrar");
-		btnHuespedBorrar.setBounds(156, 11, 63, 23);
+		borrar = new ImageIcon("imagenes/borrar.jpg");
+		btnHuespedBorrar = new JButton(borrar);
+		btnHuespedBorrar.setBounds(202, 11, 88, 84);
 		panelHuespedIzquierda.add(btnHuespedBorrar);
 		
-		btnHuespedConfirmar = new JButton("Confirmar");
-		btnHuespedConfirmar.setBounds(229, 11, 63, 23);
+		guardar = new ImageIcon("imagenes/botonGuardar.jpg");
+		btnHuespedConfirmar = new JButton(guardar);
+		btnHuespedConfirmar.setBounds(300, 11, 88, 84);
 		panelHuespedIzquierda.add(btnHuespedConfirmar);
 		
-		btnHuespedDeshacer = new JButton("Deshacer");
-		btnHuespedDeshacer.setBounds(302, 11, 63, 23);
+		deshacer = new ImageIcon("imagenes/botonDeshacer.jpg");
+		btnHuespedDeshacer = new JButton(deshacer);
+		btnHuespedDeshacer.setBounds(398, 12, 88, 83);
 		panelHuespedIzquierda.add(btnHuespedDeshacer);
 		
 		lblHuespedNumeroHabitacion = new JLabel("Nº Habitación:");
-		lblHuespedNumeroHabitacion.setBounds(10, 116, 80, 14);
+		lblHuespedNumeroHabitacion.setBounds(10, 158, 80, 14);
 		panelHuespedIzquierda.add(lblHuespedNumeroHabitacion);
 		
 		lblHuespedNombre = new JLabel("Nombre:");
-		lblHuespedNombre.setBounds(10, 141, 63, 14);
+		lblHuespedNombre.setBounds(10, 183, 63, 14);
 		panelHuespedIzquierda.add(lblHuespedNombre);
 		
 		lblHuespedApellidos = new JLabel("Apellidos:");
-		lblHuespedApellidos.setBounds(10, 166, 63, 14);
+		lblHuespedApellidos.setBounds(10, 208, 63, 14);
 		panelHuespedIzquierda.add(lblHuespedApellidos);
 		
 		lblHuespedDni = new JLabel("Dni:");
-		lblHuespedDni.setBounds(10, 191, 46, 14);
+		lblHuespedDni.setBounds(10, 233, 46, 14);
 		panelHuespedIzquierda.add(lblHuespedDni);
 		
 		lblHuespedFechaEntrada = new JLabel("Fecha Entrada:");
-		lblHuespedFechaEntrada.setBounds(10, 216, 105, 14);
+		lblHuespedFechaEntrada.setBounds(10, 258, 105, 14);
 		panelHuespedIzquierda.add(lblHuespedFechaEntrada);
 		
 		lblHuespedFechaSalida = new JLabel("Fecha Salida:");
-		lblHuespedFechaSalida.setBounds(10, 241, 105, 14);
+		lblHuespedFechaSalida.setBounds(10, 283, 105, 14);
 		panelHuespedIzquierda.add(lblHuespedFechaSalida);
 		
 		lblHuespedNumeroGrupo = new JLabel("Nº Grupo:");
-		lblHuespedNumeroGrupo.setBounds(10, 266, 80, 14);
+		lblHuespedNumeroGrupo.setBounds(10, 308, 80, 14);
 		panelHuespedIzquierda.add(lblHuespedNumeroGrupo);
 		
 		lblHuespedMatricula = new JLabel("Matrícula:");
-		lblHuespedMatricula.setBounds(10, 291, 80, 14);
+		lblHuespedMatricula.setBounds(10, 333, 80, 14);
 		panelHuespedIzquierda.add(lblHuespedMatricula);
 		
 		textHuespedFechaEntrada = new JTextField();
-		textHuespedFechaEntrada.setBounds(125, 210, 86, 20);
+		textHuespedFechaEntrada.setBounds(125, 252, 86, 20);
 		panelHuespedIzquierda.add(textHuespedFechaEntrada);
 		textHuespedFechaEntrada.setColumns(10);
 		textHuespedFechaEntrada.setEditable(false);
 		
 		textHuespedFechaSalida = new JTextField();
 		textHuespedFechaSalida.setColumns(10);
-		textHuespedFechaSalida.setBounds(125, 235, 86, 20);
+		textHuespedFechaSalida.setBounds(125, 277, 86, 20);
 		panelHuespedIzquierda.add(textHuespedFechaSalida);
 		textHuespedFechaSalida.setEditable(false);
 		
 		textHuespedNumeroHabitacion = new JTextField();
 		textHuespedNumeroHabitacion.setColumns(10);
-		textHuespedNumeroHabitacion.setBounds(125, 110, 86, 20);
+		textHuespedNumeroHabitacion.setBounds(125, 152, 86, 20);
 		panelHuespedIzquierda.add(textHuespedNumeroHabitacion);
 		textHuespedNumeroHabitacion.setEditable(false);
 		
 		textHuespedNombre = new JTextField();
 		textHuespedNombre.setColumns(10);
-		textHuespedNombre.setBounds(125, 135, 130, 20);
+		textHuespedNombre.setBounds(125, 177, 130, 20);
 		panelHuespedIzquierda.add(textHuespedNombre);
 		textHuespedNombre.setEditable(false);
 		
 		textHuespedDni = new JTextField();
-		textHuespedDni.setBounds(125, 185, 86, 20);
+		textHuespedDni.setBounds(125, 227, 86, 20);
 		panelHuespedIzquierda.add(textHuespedDni);
 		textHuespedDni.setColumns(10);
 		textHuespedDni.setEditable(false);
 		
 		textHuespedApellidos = new JTextField();
-		textHuespedApellidos.setBounds(125, 160, 188, 20);
+		textHuespedApellidos.setBounds(125, 202, 188, 20);
 		panelHuespedIzquierda.add(textHuespedApellidos);
 		textHuespedApellidos.setColumns(10);
 		textHuespedApellidos.setEditable(false);
 		
 		textHuespedNumeroGrupo = new JTextField();
-		textHuespedNumeroGrupo.setBounds(125, 260, 86, 20);
+		textHuespedNumeroGrupo.setBounds(125, 302, 86, 20);
 		panelHuespedIzquierda.add(textHuespedNumeroGrupo);
 		textHuespedNumeroGrupo.setColumns(10);
 		textHuespedNumeroGrupo.setEditable(false);
 		
 		textHuespedMatricula = new JTextField();
-		textHuespedMatricula.setBounds(125, 285, 86, 20);
+		textHuespedMatricula.setBounds(125, 327, 86, 20);
 		panelHuespedIzquierda.add(textHuespedMatricula);
 		textHuespedMatricula.setColumns(10);
 		textHuespedMatricula.setEditable(false);
 		
 		layeredPanelHuespedNuevo = new JLayeredPane();
-		layeredPanelHuespedNuevo.setBounds(10, 316, 396, 158);
+		layeredPanelHuespedNuevo.setBounds(10, 358, 396, 158);
 		panelHuespedIzquierda.add(layeredPanelHuespedNuevo);
 		layeredPanelHuespedNuevo.setLayout(new CardLayout(0, 0));
 		
@@ -844,16 +976,16 @@ public class FrmMain extends JFrame {
 		panelHuespedNuevoGrupo.add(lblHuespedNuevoNumeroGrupo);
 		
 		lblHuespedNuevoParking = new JLabel("Parking:");
-		lblHuespedNuevoParking.setBounds(10, 71, 46, 14);
+		lblHuespedNuevoParking.setBounds(10, 71, 67, 14);
 		panelHuespedNuevoGrupo.add(lblHuespedNuevoParking);
 		
 		textHuespedNuevoNumeroGrupo = new JTextField();
-		textHuespedNuevoNumeroGrupo.setBounds(87, 43, 86, 20);
+		textHuespedNuevoNumeroGrupo.setBounds(118, 43, 86, 20);
 		panelHuespedNuevoGrupo.add(textHuespedNuevoNumeroGrupo);
 		textHuespedNuevoNumeroGrupo.setColumns(10);
 		
 		chcHuespedNuevoParking = new JCheckBox("");
-		chcHuespedNuevoParking.setBounds(87, 67, 97, 23);
+		chcHuespedNuevoParking.setBounds(118, 62, 97, 23);
 		panelHuespedNuevoGrupo.add(chcHuespedNuevoParking);
 		
 		panelHuespedNuevoHabitacion = new JPanel();
@@ -861,11 +993,11 @@ public class FrmMain extends JFrame {
 		panelHuespedNuevoHabitacion.setLayout(null);
 		
 		lblHuespedNuevoHabitacion = new JLabel("Nº de la habitación:");
-		lblHuespedNuevoHabitacion.setBounds(10, 22, 102, 14);
+		lblHuespedNuevoHabitacion.setBounds(10, 22, 122, 14);
 		panelHuespedNuevoHabitacion.add(lblHuespedNuevoHabitacion);
 		
 		textHuespedNuevoNumeroHabitacion = new JTextField();
-		textHuespedNuevoNumeroHabitacion.setBounds(122, 19, 86, 20);
+		textHuespedNuevoNumeroHabitacion.setBounds(158, 19, 86, 20);
 		panelHuespedNuevoHabitacion.add(textHuespedNuevoNumeroHabitacion);
 		textHuespedNuevoNumeroHabitacion.setColumns(10);
 		
@@ -874,11 +1006,11 @@ public class FrmMain extends JFrame {
 		panelHuespedNuevoFormulario.setLayout(null);
 		
 		lblHuespedNuevoNombre = new JLabel("Nombre:");
-		lblHuespedNuevoNombre.setBounds(10, 11, 46, 14);
+		lblHuespedNuevoNombre.setBounds(10, 11, 69, 14);
 		panelHuespedNuevoFormulario.add(lblHuespedNuevoNombre);
 		
 		lblHuespedNuevoApellidos = new JLabel("Apellidos:");
-		lblHuespedNuevoApellidos.setBounds(10, 36, 46, 14);
+		lblHuespedNuevoApellidos.setBounds(10, 36, 80, 14);
 		panelHuespedNuevoFormulario.add(lblHuespedNuevoApellidos);
 		
 		lblHuespedNuevoDni = new JLabel("Dni:");
@@ -886,7 +1018,7 @@ public class FrmMain extends JFrame {
 		panelHuespedNuevoFormulario.add(lblHuespedNuevoDni);
 		
 		lblHuespedNuevoFechaEntrada = new JLabel("Fecha Entrada:");
-		lblHuespedNuevoFechaEntrada.setBounds(10, 86, 80, 14);
+		lblHuespedNuevoFechaEntrada.setBounds(10, 86, 99, 14);
 		panelHuespedNuevoFormulario.add(lblHuespedNuevoFechaEntrada);
 		
 		lblHuespedNuevoFechaSalida = new JLabel("Fecha Salida:");
@@ -894,53 +1026,57 @@ public class FrmMain extends JFrame {
 		panelHuespedNuevoFormulario.add(lblHuespedNuevoFechaSalida);
 		
 		lblHuespedNuevoMatricula = new JLabel("Matrícula:");
-		lblHuespedNuevoMatricula.setBounds(10, 133, 66, 14);
+		lblHuespedNuevoMatricula.setBounds(10, 133, 80, 14);
 		panelHuespedNuevoFormulario.add(lblHuespedNuevoMatricula);
 		
 		textHuespedNuevoFechaEntrada = new JTextField();
-		textHuespedNuevoFechaEntrada.setBounds(100, 83, 86, 20);
+		textHuespedNuevoFechaEntrada.setBounds(119, 80, 86, 20);
 		panelHuespedNuevoFormulario.add(textHuespedNuevoFechaEntrada);
 		textHuespedNuevoFechaEntrada.setColumns(10);
 		
 		textHuespedNuevoFechaSalida = new JTextField();
-		textHuespedNuevoFechaSalida.setBounds(100, 108, 86, 20);
+		textHuespedNuevoFechaSalida.setBounds(119, 105, 86, 20);
 		panelHuespedNuevoFormulario.add(textHuespedNuevoFechaSalida);
 		textHuespedNuevoFechaSalida.setColumns(10);
 		
 		textHuespedNuevoDni = new JTextField();
-		textHuespedNuevoDni.setBounds(100, 58, 86, 20);
+		textHuespedNuevoDni.setBounds(119, 55, 86, 20);
 		panelHuespedNuevoFormulario.add(textHuespedNuevoDni);
 		textHuespedNuevoDni.setColumns(10);
 		
 		textHuespedNuevoApellidos = new JTextField();
-		textHuespedNuevoApellidos.setBounds(100, 33, 275, 20);
+		textHuespedNuevoApellidos.setBounds(119, 33, 256, 20);
 		panelHuespedNuevoFormulario.add(textHuespedNuevoApellidos);
 		textHuespedNuevoApellidos.setColumns(10);
 		
 		textHuespedNuevoNombre = new JTextField();
-		textHuespedNuevoNombre.setBounds(100, 8, 135, 20);
+		textHuespedNuevoNombre.setBounds(119, 8, 135, 20);
 		panelHuespedNuevoFormulario.add(textHuespedNuevoNombre);
 		textHuespedNuevoNombre.setColumns(10);
 		
 		textHuespedNuevoMatricula = new JTextField();
-		textHuespedNuevoMatricula.setBounds(100, 130, 86, 20);
+		textHuespedNuevoMatricula.setBounds(119, 127, 86, 20);
 		panelHuespedNuevoFormulario.add(textHuespedNuevoMatricula);
 		textHuespedNuevoMatricula.setColumns(10);
 		
-		btnHuespedPrincipio = new JButton("Principio");
-		btnHuespedPrincipio.setBounds(10, 71, 89, 23);
+		primero = new ImageIcon("imagenes/navPri.jpg");
+		btnHuespedPrincipio = new JButton(primero);
+		btnHuespedPrincipio.setBounds(10, 101, 48, 46);
 		panelHuespedIzquierda.add(btnHuespedPrincipio);
 		
-		btnHuespedIzquierda = new JButton("Izquierda");
-		btnHuespedIzquierda.setBounds(109, 71, 89, 23);
+		izquierda = new ImageIcon("imagenes/navIzq.jpg");
+		btnHuespedIzquierda = new JButton(izquierda);
+		btnHuespedIzquierda.setBounds(68, 101, 48, 46);
 		panelHuespedIzquierda.add(btnHuespedIzquierda);
 		
-		btnHuespedDerecha = new JButton("Derecha");
-		btnHuespedDerecha.setBounds(208, 71, 89, 23);
+		derecha = new ImageIcon("imagenes/navDer.jpg");
+		btnHuespedDerecha = new JButton(derecha);
+		btnHuespedDerecha.setBounds(126, 101, 48, 46);
 		panelHuespedIzquierda.add(btnHuespedDerecha);
 		
-		btnHuespedFinal = new JButton("Final");
-		btnHuespedFinal.setBounds(307, 71, 89, 23);
+		ultimo = new ImageIcon("imagenes/navUlt.jpg");
+		btnHuespedFinal = new JButton(ultimo);
+		btnHuespedFinal.setBounds(184, 101, 48, 46);
 		panelHuespedIzquierda.add(btnHuespedFinal);
 		
 		panelParkingIzquierda = new JPanel();
@@ -987,7 +1123,7 @@ public class FrmMain extends JFrame {
 		textParkingNumero.setEditable(false);
 		
 		layeredPanelDerecha = new JLayeredPane();
-		layeredPanelDerecha.setBounds(479, 115, 444, 485);
+		layeredPanelDerecha.setBounds(568, 115, 452, 542);
 		panelPrincipal.add(layeredPanelDerecha);
 		layeredPanelDerecha.setLayout(new CardLayout(0, 0));
 		
@@ -1019,37 +1155,6 @@ public class FrmMain extends JFrame {
 		panelParkingDerecha.setLayout(new GridLayout(5, 4));
 		layeredPanelDerecha.add(panelParkingDerecha, "name_1128781942283400");
 		
-		parkings = PaS.obtenerParking();
-		puntero = 0;
-		Parking parking;
-		for (int i = 1; i <= 20; i++) {
-			parking = parkings.get(puntero);
-			puntero++;
-			JButton parkingBoton = new JButton("Parking "+i);
-			if(parking.isOcupado()) {
-				parkingBoton.setBackground(Color.RED);
-			}else {
-				parkingBoton.setBackground(Color.GREEN);
-			}
-            parkingBoton.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                	puntero = Integer.parseInt(parkingBoton.getText().substring(8))-1;
-					Parking parking = parkings.get(puntero);
-                	textParkingMatricula.setText(parking.getMatricula());
-                	textParkingNumero.setText(String.valueOf(parking.getNumeroParking()));
-                	textParkingDni.setText(parking.getDniHuesped());
-                	if(parking.isOcupado()) {
-                		chcParkingOcupado.setSelected(true);
-                	}else{
-                		chcParkingOcupado.setSelected(false);
-                	}
-                	
-                }
-            });
-            
-            panelParkingDerecha.add(parkingBoton);
-		}
-		puntero = 0;
-		
 	}
+	
 }

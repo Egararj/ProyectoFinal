@@ -1,6 +1,7 @@
 package servicio;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 
 import excepciones.CampoVacioException;
@@ -36,6 +37,19 @@ public class HuespedService implements IHuesped{
 			ParkingRepositorio par = new ParkingRepositorio();
 			par.nuevoHuesped(huesped);
 		}
+	}
+
+	@Override
+	public void borrarHuesped(int puntero) throws SQLException {
+		HuespedRepositorio hur = new HuespedRepositorio();
+		hur.borrarHuesped(puntero);
+		
+	}
+
+	@Override
+	public void editarFecha(LocalDate entrada, LocalDate salida, int puntero) throws SQLException {
+		HuespedRepositorio hur = new HuespedRepositorio();
+		hur.editarFecha(entrada, salida, puntero);
 	}
 
 }

@@ -80,4 +80,33 @@ public class HuespedRepositorio {
 		}
 	}
 
+	public void borrarHuesped(int puntero) throws SQLException {
+
+		String sql = "DELETE FROM huesped WHERE numero_habitacion = ?";
+		
+		try(Connection conn = DbConnection.getConnection();
+			PreparedStatement ps = conn.prepareStatement(sql)){
+			
+			ps.setInt(1, puntero);
+			
+			ps.executeUpdate();
+		}
+	}
+
+	public void editarFecha(LocalDate entrada, LocalDate salida, int puntero) throws SQLException {
+		
+		String sql = "UPDATE huesped SET fecha_entrada=?, fecha_salida=? WHERE numero_habitacion=?";
+		
+		try(Connection conn = DbConnection.getConnection();
+			PreparedStatement ps = conn.prepareStatement(sql)){
+			
+			ps.setDate(1, java.sql.Date.valueOf(entrada));
+			ps.setDate(2, java.sql.Date.valueOf(salida));
+			ps.setInt(3, puntero);
+			
+			ps.executeUpdate();
+			
+		}
+	}
+
 }

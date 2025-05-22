@@ -62,4 +62,20 @@ public class ParkingRepositorio {
 		
 	}
 
+	public void liberarParking(int puntero) throws SQLException {
+		
+		String sql = "UPDATE parking SET ocupado =?, matricula=?, dni_dueño=? WHERE numero_parking=?";
+		
+		try(Connection conn = DbConnection.getConnection();
+			PreparedStatement ps = conn.prepareStatement(sql)){
+			
+			ps.setBoolean(1, false);
+			ps.setString(2, null);
+			ps.setString(3, null);
+			ps.setInt(4, puntero);
+			
+			ps.executeUpdate();
+		}
+	}
+
 }
